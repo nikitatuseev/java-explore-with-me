@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StatsClientTest {
+class StatsClientTests {
 
     @Mock
     private RestTemplate restTemplate;

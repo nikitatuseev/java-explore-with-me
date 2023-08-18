@@ -15,13 +15,19 @@ import java.util.List;
 
 public interface EventService {
     EventFullDto createEvent(Integer userId, NewEventDto eventDto);
+
     EventFullDto updateEvent(Integer userId, Integer eventId, UpdateEventDto eventDto);
+
     List<EventShortDto> getUserEvents(Integer userId, Integer from, Integer size);
+
     EventFullDto getUserEvent(Integer userId, Integer eventId);
+
     List<ParticipationRequestDto> getEventRequestsForUser(Integer userId, Integer eventId);
+
     EventRequestStatusUpdateDto updateRequestStatus(Integer userId,
                                                     Integer eventId,
                                                     EventRequestStatusUpdateRequest statusUpdateDto);
+
     List<EventFullDto> getEventsByAdmin(List<Integer> users,
                                         List<State> states,
                                         List<Integer> categories,
@@ -29,8 +35,11 @@ public interface EventService {
                                         LocalDateTime rangeEnd,
                                         Integer from,
                                         Integer size);
+
     EventFullDto updateEventByAdmin(Integer eventId, UpdateEventDto updateEventAdminDto);
+
     EventFullDto getEvent(Integer eventId, String uri);
+
     List<EventShortDto> getEvents(String text,
                                   List<Integer> categories,
                                   Boolean paid,

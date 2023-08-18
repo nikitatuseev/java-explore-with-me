@@ -4,12 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import ru.practicum.model.hit.dto.HitDto;
 import ru.practicum.client.StatsClient;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.EventService;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.enums.SortBy;
-import ru.practicum.model.hit.dto.HitDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;

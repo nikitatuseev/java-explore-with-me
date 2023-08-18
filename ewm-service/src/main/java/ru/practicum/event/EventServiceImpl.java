@@ -5,8 +5,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.practicum.category.CategoryRepository;
 import ru.practicum.client.StatsClient;
+import ru.practicum.model.hit.dto.UriStatDto;
+import ru.practicum.category.CategoryRepository;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
@@ -17,7 +18,6 @@ import ru.practicum.category.Category;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.Status;
-import ru.practicum.model.hit.dto.ViewHitStatsDto;
 import ru.practicum.event.location.Location;
 import ru.practicum.request.*;
 import ru.practicum.user.User;
@@ -221,7 +221,7 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с ID %s не найдено", eventId);
         }
-        List<ViewHitStatsDto> statsDtos = statsClient.getStats(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.now(), new String[]{uri}, true);
+        List<UriStatDto> statsDtos = statsClient.getStats(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.now(), new String[]{uri}, true);
         if (!statsDtos.isEmpty()) {
             event.setViews(statsDtos.get(0).getHits().intValue());
         } else {

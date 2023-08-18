@@ -1,47 +1,54 @@
-version: '3.1'
+version: '3.8'
 services:
   stats-server:
-    build:
-      context: ./stats/server
-      dockerfile: Dockerfile
+    build: ./stats/server
     container_name: stats-server
-    ports:
-      - "9090:9090"
-      - "9091:9091"
     depends_on:
       - stats-db
+    ports:
+      - "9090:9090"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
-      - SPRING_DATASOURCE_NAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/exploreStats
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
 
   stats-db:
     image: postgres:14-alpine
     container_name: stats-db
     ports:
-      - "6542:5432"
-    environment:
-      - POSTGRES_DB=stats
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - "6541:5432"
+    volumes:
+      - /var/lib/postgresql/dataStats
 
-  ewm-service:
-    build:
-      context: ./ewm-service
-      dockerfile: Dockerfile
-    container_name: ewm-server
-    ports:
-      - "8080:8080"
+    environment:
+      - POSTGRES_DB=exploreStats
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+
+  main-server:
+    build: ./ewm-service
+    container_name: ewm-service
+    restart: on-failure
     depends_on:
       - ewm-db
       - stats-server
+    ports:
+      - "8080:8080"
+    environment:
+      - MAIN_SERVER_URL=http://main-server:8080
+      - SPRING_DATASOURCE_MAIN=jdbc:postgresql://ewm-db:5432/exploreMain
+      - POSTGRES_USER_MAIN=root
+      - POSTGRES_PASSWORD_MAIN=root
 
   ewm-db:
     image: postgres:14-alpine
-    container_name: ewm-db
+    container_name: main-db
     ports:
-      - "6541:5432"
+      - "6542:5432"
+    volumes:
+      - /var/lib/postgresql/dataMain
+
     environment:
-      - POSTGRES_DB=ewm
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=exploreMain
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root

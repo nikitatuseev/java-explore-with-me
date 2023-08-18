@@ -8,7 +8,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import practicum.HitDto;
-import practicum.StatsClient;
+import ru.practicum.StatsClient;
 import practicum.UriStatDto;
 
 import java.time.LocalDateTime;

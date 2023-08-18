@@ -1,9 +1,11 @@
-package practicum;
+package ru.practicum;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import practicum.HitDto;
+import practicum.UriStatDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

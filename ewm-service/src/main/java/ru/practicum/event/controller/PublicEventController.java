@@ -1,6 +1,8 @@
 package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ru.practicum.event.dto.EventFilterDto;
@@ -24,17 +26,16 @@ public class PublicEventController {
 
 
     @GetMapping
-    @ResponseBody
-    public List<EventShortDto> getEvents(@ModelAttribute EventFilterDto filterDto, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<List<EventShortDto>> getEvents(@ModelAttribute EventFilterDto filterDto, HttpServletRequest httpServletRequest) {
         statsClient.postHit(new HitDto("exploreWithMe", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr(), LocalDateTime.now()));
-        return eventService.getEvents(filterDto);
+        List<EventShortDto> events = eventService.getEvents(filterDto);
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{eventId}")
-    @ResponseBody
-    public EventFullDto getEvent(@PathVariable Integer eventId, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<EventFullDto> getEvent(@PathVariable Integer eventId, HttpServletRequest httpServletRequest) {
         String uri = httpServletRequest.getRequestURI();
         statsClient.postHit(new HitDto("exploreWithMe", uri, httpServletRequest.getRemoteAddr(), LocalDateTime.now()));
-        return eventService.getEvent(eventId, uri);
+        return ResponseEntity.ok().body(eventService.getEvent(eventId, uri));
     }
 }

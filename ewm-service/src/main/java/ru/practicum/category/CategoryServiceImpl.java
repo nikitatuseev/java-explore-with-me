@@ -75,7 +75,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto getCategoryById(Integer categoryId) {
         Category category = categoryRepository
                 .findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено", categoryId));
+                .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено",categoryId));
         return categoryMapper.categoryToDto(category);
     }
 }

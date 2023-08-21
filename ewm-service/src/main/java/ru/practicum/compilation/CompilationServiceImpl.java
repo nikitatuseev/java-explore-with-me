@@ -43,7 +43,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional(readOnly = true)
     public CompilationDto getCompilation(Integer compilationId) {
-        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
+        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
         CompilationDto compilationDto = compilationMapper.compilationToCompilationDto(compilation);
         compilationDto.setEvents(eventMapper.listEventsToListDto(compilation.getEvents()));
         return compilationDto;
@@ -66,14 +66,14 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public void deleteCompilation(Integer compilationId) {
-        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
+        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
         compilationRepository.deleteById(compilationId);
     }
 
     @Override
     @Transactional
     public CompilationDto updateCompilation(Integer compilationId, UpdateCompilationDto updateCompilationDto) {
-        Compilation compilationToUpdate = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
+        Compilation compilationToUpdate = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
         if (updateCompilationDto.getEvents() != null) {
             List<Event> events = eventRepository.findAllById(updateCompilationDto.getEvents());
             compilationToUpdate.setEvents(events);

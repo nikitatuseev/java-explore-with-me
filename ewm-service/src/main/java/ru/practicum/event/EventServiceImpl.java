@@ -41,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final CustomEventMapper customEventMapper;
 
     @Override
+    @Transactional
     public EventFullDto createEvent(Integer userId, NewEventDto eventDto) {
         User initiator = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователя с ID %s не найдено", userId));
         Category category = categoryRepository.findById(eventDto.getCategory())
@@ -50,9 +51,11 @@ public class EventServiceImpl implements EventService {
         }
         Location location = locationRepository.save(eventDto.getLocation());
         Event event = eventMapper.newEventToDto(eventDto);
-        event = eventRepository.save(customEventMapper.createEventFromDtoAndUser(event, location, category, initiator, eventDto));
+        event=customEventMapper.createEventFromDtoAndUser(event,eventDto,location,category,initiator);
+        event = eventRepository.save(event);
         return eventMapper.eventToDto(event);
     }
+
 
     @Override
     @Transactional
@@ -228,6 +231,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public List<EventShortDto> getEvents(EventFilterDto filterDto) {
         validateDateRange(filterDto.getRangeStart(), filterDto.getRangeEnd());
 
@@ -257,7 +261,6 @@ public class EventServiceImpl implements EventService {
 
         return eventMapper.listEventsToListDto(result);
     }
-
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
             throw new BadRequestException("Дата окончания не может быть раньше даты начала");

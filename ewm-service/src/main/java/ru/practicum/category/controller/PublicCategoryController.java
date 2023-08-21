@@ -13,6 +13,7 @@ import java.util.List;
 public class PublicCategoryController {
 
     private final CategoryService categoryService;
+
     @GetMapping
     public List<CategoryDto> getAllCategories(@RequestParam(defaultValue = "0") Integer from,
                                               @RequestParam(defaultValue = "10") Integer size) {

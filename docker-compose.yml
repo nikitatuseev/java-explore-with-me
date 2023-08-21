@@ -28,7 +28,6 @@ services:
   ewm-service:
     build: ./ewm-service
     container_name: ewm-service
-    restart: on-failure
     depends_on:
       - ewm-db
       - stats-server

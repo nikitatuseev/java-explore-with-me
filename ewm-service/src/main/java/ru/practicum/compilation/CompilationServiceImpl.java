@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationDto;
 import ru.practicum.event.EventMapper;
@@ -25,6 +26,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventRepository eventRepository;
 
     @Override
+    @Transactional
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         List<CompilationDto> result = new ArrayList<>();
         int page = from > 0 ? from / size : 0;
@@ -39,14 +41,16 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CompilationDto getCompilation(Integer compilationId) {
-        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
+        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
         CompilationDto compilationDto = compilationMapper.compilationToCompilationDto(compilation);
         compilationDto.setEvents(eventMapper.listEventsToListDto(compilation.getEvents()));
         return compilationDto;
     }
 
     @Override
+    @Transactional
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
         Compilation compilation = compilationMapper.newCompilationDtoToCompilation(newCompilationDto);
         if (newCompilationDto.getEvents() != null) {
@@ -60,14 +64,16 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public void deleteCompilation(Integer compilationId) {
-        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
+        Compilation compilation = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
         compilationRepository.deleteById(compilationId);
     }
 
     @Override
+    @Transactional
     public CompilationDto updateCompilation(Integer compilationId, UpdateCompilationDto updateCompilationDto) {
-        Compilation compilationToUpdate = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено",compilationId));
+        Compilation compilationToUpdate = compilationRepository.findById(compilationId).orElseThrow(() -> new NotFoundException("Подборка с ID %s не найдено", compilationId));
         if (updateCompilationDto.getEvents() != null) {
             List<Event> events = eventRepository.findAllById(updateCompilationDto.getEvents());
             compilationToUpdate.setEvents(events);

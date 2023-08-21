@@ -1,10 +1,6 @@
 package ru.practicum.event;
 
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventDto;
-import ru.practicum.event.enums.SortBy;
+import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.State;
 import ru.practicum.request.EventRequestStatusUpdateDto;
 import ru.practicum.request.EventRequestStatusUpdateRequest;
@@ -40,13 +36,5 @@ public interface EventService {
 
     EventFullDto getEvent(Integer eventId, String uri);
 
-    List<EventShortDto> getEvents(String text,
-                                  List<Integer> categories,
-                                  Boolean paid,
-                                  LocalDateTime rangeStart,
-                                  LocalDateTime rangeEnd,
-                                  Boolean onlyAvailable,
-                                  SortBy sort,
-                                  Integer from,
-                                  Integer size);
+    List<EventShortDto> getEvents(EventFilterDto filterDto);
 }

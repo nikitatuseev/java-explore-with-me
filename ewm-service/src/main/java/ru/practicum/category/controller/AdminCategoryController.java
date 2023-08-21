@@ -2,11 +2,11 @@ package ru.practicum.category.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.CategoryService;
 import ru.practicum.category.dto.NewCategoryDto;
+import ru.practicum.category.dto.UpdateCategoryDto;
 
 import javax.validation.Valid;
 
@@ -18,10 +18,10 @@ public class AdminCategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
-    public ResponseEntity<CategoryDto> createCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(newCategoryDto));
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryDto createCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
+        return categoryService.createCategory(newCategoryDto);
     }
-
 
     @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -30,8 +30,9 @@ public class AdminCategoryController {
     }
 
     @PatchMapping("/{catId}")
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable("catId") Integer categoryId,
-                                                      @RequestBody @Valid NewCategoryDto newCategoryDto) {
-        return ResponseEntity.ok().body(categoryService.updateCategory(categoryId, newCategoryDto));
+    @ResponseStatus(HttpStatus.OK)
+    public CategoryDto updateCategory(@PathVariable("catId") Integer categoryId,
+                                      @RequestBody @Valid UpdateCategoryDto updateCategoryDto) {
+        return categoryService.updateCategory(categoryId, updateCategoryDto);
     }
 }

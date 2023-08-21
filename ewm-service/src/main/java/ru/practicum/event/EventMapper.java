@@ -13,6 +13,7 @@ public interface EventMapper {
 
     List<EventShortDto> listEventsToListDto(List<Event> eventList);
 
+
     @Mapping(target = "category", ignore = true)
     Event newEventToDto(NewEventDto eventDto);
 

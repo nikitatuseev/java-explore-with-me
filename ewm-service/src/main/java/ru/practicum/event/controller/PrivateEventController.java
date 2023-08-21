@@ -2,7 +2,6 @@ package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.*;
 import ru.practicum.event.dto.EventFullDto;
@@ -24,41 +23,55 @@ public class PrivateEventController {
     private final EventService eventService;
 
     @GetMapping
-    public ResponseEntity<List<EventShortDto>> getUserEvents(@PathVariable Integer userId,
-                                                             @RequestParam(defaultValue = "0") Integer from,
-                                                             @RequestParam(defaultValue = "10") Integer size) {
-        return ResponseEntity.ok().body(eventService.getUserEvents(userId, from, size));
+    @ResponseBody
+    public List<EventShortDto> getUserEvents(
+            @PathVariable Integer userId,
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return eventService.getUserEvents(userId, from, size);
     }
 
     @PostMapping
-    public ResponseEntity<EventFullDto> createNewEvent(@PathVariable Integer userId,
-                                                       @RequestBody @Valid NewEventDto newEventDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(userId, newEventDto));
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public EventFullDto createNewEvent(
+            @PathVariable Integer userId,
+            @RequestBody @Valid NewEventDto newEventDto) {
+        return eventService.createEvent(userId, newEventDto);
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> getUserEvent(@PathVariable Integer userId, @PathVariable Integer eventId) {
-        return ResponseEntity.ok().body(eventService.getUserEvent(userId, eventId));
+    @ResponseBody
+    public EventFullDto getUserEvent(
+            @PathVariable Integer userId,
+            @PathVariable Integer eventId) {
+        return eventService.getUserEvent(userId, eventId);
     }
 
     @PatchMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> updateEvent(@PathVariable Integer userId,
-                                                    @PathVariable Integer eventId,
-                                                    @RequestBody @Valid UpdateEventDto updateEventDto) {
-        return ResponseEntity.ok().body(eventService.updateEvent(userId, eventId, updateEventDto));
+    @ResponseBody
+    public EventFullDto updateEvent(
+            @PathVariable Integer userId,
+            @PathVariable Integer eventId,
+            @RequestBody @Valid UpdateEventDto updateEventDto) {
+        return eventService.updateEvent(userId, eventId, updateEventDto);
     }
 
     @GetMapping("/{eventId}/requests")
-    public ResponseEntity<List<ParticipationRequestDto>> getEventRequestsForUser(@PathVariable Integer userId,
-                                                                                 @PathVariable Integer eventId) {
-        return ResponseEntity.ok().body(eventService.getEventRequestsForUser(userId, eventId));
+    @ResponseBody
+    public List<ParticipationRequestDto> getEventRequestsForUser(
+            @PathVariable Integer userId,
+            @PathVariable Integer eventId) {
+        return eventService.getEventRequestsForUser(userId, eventId);
     }
 
     @PatchMapping("/{eventId}/requests")
-    public ResponseEntity<EventRequestStatusUpdateDto> updateRequestStatus(@PathVariable Integer userId,
-                                                                           @PathVariable Integer eventId,
-                                                                           @RequestBody EventRequestStatusUpdateRequest statusUpdateRequest) {
-        return ResponseEntity.ok().body(eventService.updateRequestStatus(userId, eventId, statusUpdateRequest));
+    @ResponseBody
+    public EventRequestStatusUpdateDto updateRequestStatus(
+            @PathVariable Integer userId,
+            @PathVariable Integer eventId,
+            @RequestBody EventRequestStatusUpdateRequest statusUpdateRequest) {
+        return eventService.updateRequestStatus(userId, eventId, statusUpdateRequest);
     }
 }
 

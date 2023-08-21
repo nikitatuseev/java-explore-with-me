@@ -5,17 +5,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
+import ru.practicum.event.dto.*;
+import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.UriStatDto;
 import ru.practicum.category.CategoryRepository;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.exception.*;
 import ru.practicum.request.RequestMapper;
 import ru.practicum.category.Category;
-import ru.practicum.event.enums.SortBy;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.Status;
 import ru.practicum.event.location.Location;
@@ -40,6 +38,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final StatsClient statsClient;
+    private final CustomEventMapper customEventMapper;
 
     @Override
     public EventFullDto createEvent(Integer userId, NewEventDto eventDto) {
@@ -51,21 +50,12 @@ public class EventServiceImpl implements EventService {
         }
         Location location = locationRepository.save(eventDto.getLocation());
         Event event = eventMapper.newEventToDto(eventDto);
-        event.setLocation(location);
-        event.setCategory(category);
-        event.setCreatedOn(LocalDateTime.now());
-        event.setInitiator(initiator);
-        event.setPaid(eventDto.getPaid() != null ? eventDto.getPaid() : false);
-        event.setParticipantLimit(eventDto.getParticipantLimit() != null ? eventDto.getParticipantLimit() : 0);
-        event.setRequestModeration(eventDto.getRequestModeration() != null ? eventDto.getRequestModeration() : true);
-        event.setState(State.PENDING);
-        event.setViews(0);
-        event.setConfirmedRequests(0);
-        event = eventRepository.save(event);
+        event = eventRepository.save(customEventMapper.createEventFromDtoAndUser(event, location, category, initiator, eventDto));
         return eventMapper.eventToDto(event);
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEvent(Integer userId, Integer eventId, UpdateEventDto eventDto) {
 
         if (!userRepository.existsById(userId)) {
@@ -92,6 +82,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Integer userId, Integer from, Integer size) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователя с ID %s не найдено", userId);
@@ -103,6 +94,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getUserEvent(Integer userId, Integer eventId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователя с ID %s не найдено", userId);
@@ -112,6 +104,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventRequestsForUser(Integer userId, Integer eventId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователя с ID %s не найдено", userId);
@@ -123,6 +116,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateDto updateRequestStatus(Integer userId,
                                                            Integer eventId,
                                                            EventRequestStatusUpdateRequest statusUpdateDto) {
@@ -167,6 +161,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByAdmin(List<Integer> users,
                                                List<State> states,
                                                List<Integer> categories,
@@ -186,6 +181,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEventByAdmin(Integer eventId, UpdateEventDto updateEventAdminDto) {
         Event eventToUpdate = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие с ID %s не найдено", eventId));
         if (eventToUpdate.getEventDate() != null && eventToUpdate.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
@@ -216,6 +212,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getEvent(Integer eventId, String uri) {
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие с ID %s не найдено", eventId));
         if (!event.getState().equals(State.PUBLISHED)) {
@@ -231,43 +228,40 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getEvents(String text,
-                                         List<Integer> categories,
-                                         Boolean paid,
-                                         LocalDateTime rangeStart,
-                                         LocalDateTime rangeEnd,
-                                         Boolean onlyAvailable,
-                                         SortBy sort,
-                                         Integer from,
-                                         Integer size) {
-        List<Event> result;
+    public List<EventShortDto> getEvents(EventFilterDto filterDto) {
+        validateDateRange(filterDto.getRangeStart(), filterDto.getRangeEnd());
+
         Sort sortBy = Sort.by("views");
-        int page = from > 0 ? from / size : 0;
-        if (sort != null) {
-            if (sort.equals(SortBy.EVENT_DATE)) {
-                sortBy = Sort.by("eventDate");
-            }
+        if (filterDto.getSort() != null && filterDto.getSort() == SortBy.EVENT_DATE) {
+            sortBy = Sort.by("eventDate");
         }
-        Pageable eventsPageable = PageRequest.of(page, size, sortBy);
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeEnd.isBefore(rangeStart)) {
-                throw new BadRequestException("Дата окончания не может быть раньше даты начала");
-            }
-        }
-        if (onlyAvailable) {
-            if (rangeStart == null || rangeEnd == null) {
-                result = eventRepository.findAvailablePublishedEvents(text, categories, paid, eventsPageable);
+
+        int page = filterDto.getFrom() > 0 ? filterDto.getFrom() / filterDto.getSize() : 0;
+        Pageable eventsPageable = PageRequest.of(page, filterDto.getSize(), sortBy);
+
+        List<Event> result;
+
+        if (filterDto.getOnlyAvailable() != null && filterDto.getOnlyAvailable()) {
+            if (filterDto.getRangeStart() == null || filterDto.getRangeEnd() == null) {
+                result = eventRepository.findAvailablePublishedEvents(filterDto.getText(), filterDto.getCategories(), filterDto.getPaid(), eventsPageable);
             } else {
-                result = eventRepository.findAvailablePublishedWithDateEvents(text, categories, paid, rangeStart, rangeEnd, eventsPageable);
+                result = eventRepository.findAvailablePublishedWithDateEvents(filterDto.getText(), filterDto.getCategories(), filterDto.getPaid(), filterDto.getRangeStart(), filterDto.getRangeEnd(), eventsPageable);
             }
         } else {
-            if (rangeStart == null || rangeEnd == null) {
-                result = eventRepository.findPublishedEvents(text, categories, paid, eventsPageable);
+            if (filterDto.getRangeStart() == null || filterDto.getRangeEnd() == null) {
+                result = eventRepository.findPublishedEvents(filterDto.getText(), filterDto.getCategories(), filterDto.getPaid(), eventsPageable);
             } else {
-                result = eventRepository.findPublishedWithDateEvents(text, categories, paid, rangeStart, rangeEnd, eventsPageable);
+                result = eventRepository.findPublishedWithDateEvents(filterDto.getText(), filterDto.getCategories(), filterDto.getPaid(), filterDto.getRangeStart(), filterDto.getRangeEnd(), eventsPageable);
             }
         }
+
         return eventMapper.listEventsToListDto(result);
+    }
+
+    private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
+        if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
+            throw new BadRequestException("Дата окончания не может быть раньше даты начала");
+        }
     }
 
     private Boolean validateDateTime(LocalDateTime dateTime) {

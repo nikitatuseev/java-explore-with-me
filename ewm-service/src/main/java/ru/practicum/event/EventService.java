@@ -1,7 +1,6 @@
 package ru.practicum.event;
 
 import ru.practicum.event.dto.*;
-import ru.practicum.event.enums.SortBy;
 import ru.practicum.event.enums.State;
 import ru.practicum.request.EventRequestStatusUpdateDto;
 import ru.practicum.request.EventRequestStatusUpdateRequest;

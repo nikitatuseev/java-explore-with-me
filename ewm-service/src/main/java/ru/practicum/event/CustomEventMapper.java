@@ -1,6 +1,5 @@
 package ru.practicum.event;
 
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.practicum.category.Category;
@@ -29,7 +28,7 @@ public class CustomEventMapper {
         this.locationRepository = locationRepository;
     }
 
-    public Event createEventFromDtoAndUser(Event event,NewEventDto eventDto, Location location, Category category, User initiator) {
+    public Event createEventFromDtoAndUser(Event event, NewEventDto eventDto, Location location, Category category, User initiator) {
         event.setLocation(location);
         event.setCategory(category);
         event.setCreatedOn(LocalDateTime.now());

@@ -51,11 +51,10 @@ public class EventServiceImpl implements EventService {
         }
         Location location = locationRepository.save(eventDto.getLocation());
         Event event = eventMapper.newEventToDto(eventDto);
-        event=customEventMapper.createEventFromDtoAndUser(event,eventDto,location,category,initiator);
+        event = customEventMapper.createEventFromDtoAndUser(event, eventDto, location, category, initiator);
         event = eventRepository.save(event);
         return eventMapper.eventToDto(event);
     }
-
 
     @Override
     @Transactional
@@ -261,6 +260,7 @@ public class EventServiceImpl implements EventService {
 
         return eventMapper.listEventsToListDto(result);
     }
+
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
             throw new BadRequestException("Дата окончания не может быть раньше даты начала");

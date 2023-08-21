@@ -14,16 +14,12 @@ import ru.practicum.user.UserRepository;
 import java.time.LocalDateTime;
 
 @Component
-@NoArgsConstructor
 public class CustomEventMapper {
 
-    private EventMapper eventMapper;
-
-    private UserRepository userRepository;
-
-    private CategoryRepository categoryRepository;
-
-    private LocationRepository locationRepository;
+    private final EventMapper eventMapper;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
 
     @Autowired
     public CustomEventMapper(EventMapper eventMapper, UserRepository userRepository, CategoryRepository categoryRepository, LocationRepository locationRepository) {
@@ -33,7 +29,7 @@ public class CustomEventMapper {
         this.locationRepository = locationRepository;
     }
 
-    public Event createEventFromDtoAndUser(Event event, Location location, Category category,  User initiator,NewEventDto eventDto) {
+    public Event createEventFromDtoAndUser(Event event,NewEventDto eventDto, Location location, Category category, User initiator) {
         event.setLocation(location);
         event.setCategory(category);
         event.setCreatedOn(LocalDateTime.now());
@@ -48,4 +44,3 @@ public class CustomEventMapper {
         return event;
     }
 }
-

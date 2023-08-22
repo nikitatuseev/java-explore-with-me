@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.dto.UpdateCategoryDto;
-import ru.practicum.event.Event;
 import ru.practicum.event.EventRepository;
 import ru.practicum.exception.NotFoundException;
 

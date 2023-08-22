@@ -46,4 +46,10 @@ public class ErrorHandler {
     public Error handleConflict(RuntimeException e) {
         return new Error(HttpStatus.CONFLICT.toString(), e.toString(), e.getMessage(), LocalDateTime.now().toString());
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Error handleIllegalState(IllegalStateException e) {
+        return new Error(HttpStatus.CONFLICT.toString(), e.toString(), e.getMessage(), LocalDateTime.now().toString());
+    }
 }

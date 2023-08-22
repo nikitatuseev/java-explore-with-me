@@ -45,7 +45,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "and (e.eventDate >= current_timestamp)")
     List<Event> findEventsByUsersStatesCategoriesPageable(@Param("users") List<Integer> users,
                                                           @Param("states") List<State> states,
-                                                          @Param("categories")List<Integer> categories,
+                                                          @Param("categories") List<Integer> categories,
                                                           Pageable pageable);
 
     @Query("select e " +
@@ -113,4 +113,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
                                             @Param("rangeStart") LocalDateTime rangeStart,
                                             @Param("rangeEnd") LocalDateTime rangeEnd,
                                             Pageable pageable);
+
+    @Query("SELECT COUNT(e) FROM Event e WHERE e.category.id = :categoryId")
+    int countByCategoryId(@Param("categoryId") Integer categoryId);
 }

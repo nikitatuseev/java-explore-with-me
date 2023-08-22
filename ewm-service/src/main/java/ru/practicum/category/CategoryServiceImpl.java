@@ -37,9 +37,9 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Категория с ID %d не найдена", categoryId));
 
-        List<Event> eventsInCategory = eventRepository.findAvailablePublishedEvents(null, List.of(categoryId), null, Pageable.unpaged());
+        int eventCountInCategory = eventRepository.countByCategoryId(categoryId);
 
-        if (!eventsInCategory.isEmpty()) {
+        if (eventCountInCategory > 0) {
             throw new IllegalStateException("Невозможно удалить категорию, так как есть связанные события");
         }
 
@@ -75,7 +75,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto getCategoryById(Integer categoryId) {
         Category category = categoryRepository
                 .findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено",categoryId));
+                .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено", categoryId));
         return categoryMapper.categoryToDto(category);
     }
 }

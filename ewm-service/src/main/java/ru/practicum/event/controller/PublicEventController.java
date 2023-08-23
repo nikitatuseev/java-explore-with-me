@@ -2,9 +2,9 @@ package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import ru.practicum.event.comment.dto.CommentDto;
 import ru.practicum.event.dto.EventFilterDto;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.HitDto;
@@ -26,7 +26,7 @@ public class PublicEventController {
     private final StatsClient statsClient;
 
     @GetMapping
-    public ResponseEntity<List<EventShortDto>> getEvents(@RequestParam(required = false) String text,
+    public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
                                                          @RequestParam(required = false) List<Integer> categories,
                                                          @RequestParam(required = false) Boolean paid,
                                                          @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
@@ -38,7 +38,7 @@ public class PublicEventController {
                                                          HttpServletRequest httpServletRequest) {
         statsClient.postHit(new HitDto("exploreWithMe", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr(), LocalDateTime.now()));
 
-        List<EventShortDto> events = eventService.getEvents(EventFilterDto.builder()
+        return eventService.getEvents(EventFilterDto.builder()
                 .text(text)
                 .categories(categories)
                 .paid(paid)
@@ -49,13 +49,17 @@ public class PublicEventController {
                 .from(from)
                 .size(size)
                 .build());
-        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> getEvent(@PathVariable Integer eventId, HttpServletRequest httpServletRequest) {
+    public EventFullDto getEvent(@PathVariable Integer eventId, HttpServletRequest httpServletRequest) {
         String uri = httpServletRequest.getRequestURI();
         statsClient.postHit(new HitDto("exploreWithMe", uri, httpServletRequest.getRemoteAddr(), LocalDateTime.now()));
-        return ResponseEntity.ok().body(eventService.getEvent(eventId, uri));
+        return eventService.getEvent(eventId, uri);
+    }
+
+    @GetMapping("/{eventId}/comments")
+    public List<CommentDto> getCommentsForEvent(@PathVariable Integer eventId) {
+        return eventService.getCommentsForEvent(eventId);
     }
 }

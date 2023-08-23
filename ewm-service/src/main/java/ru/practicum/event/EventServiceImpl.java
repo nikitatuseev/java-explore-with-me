@@ -7,6 +7,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
+import ru.practicum.event.comment.Comment;
+import ru.practicum.event.comment.CommentMapper;
+import ru.practicum.event.comment.CommentRepository;
+import ru.practicum.event.comment.dto.CommentDto;
+import ru.practicum.event.comment.dto.NewCommentDto;
+import ru.practicum.event.comment.dto.UpdateCommentDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.UriStatDto;
@@ -39,6 +45,8 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final StatsClient statsClient;
     private final CustomEventMapper customEventMapper;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     @Override
     @Transactional
@@ -80,7 +88,12 @@ public class EventServiceImpl implements EventService {
         }
         Event event = updateEventFields(eventToUpdate, eventDto, categoryToUpdate);
         event = eventRepository.save(event);
-        return eventMapper.eventToDto(event);
+
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        List<CommentDto> eventComments = commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId));
+        eventFullDto.setComments(eventComments);
+
+        return eventFullDto;
     }
 
     @Override
@@ -102,7 +115,9 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Пользователя с ID %s не найдено", userId);
         }
         Event event = eventRepository.findByInitiatorIdAndId(userId, eventId).orElseThrow(() -> new NotFoundException("Событие с ID %s не найдено", eventId));
-        return eventMapper.eventToDto(event);
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        eventFullDto.setComments(commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId)));
+        return eventFullDto;
     }
 
     @Override
@@ -209,7 +224,7 @@ public class EventServiceImpl implements EventService {
             categoryToUpdate = categoryRepository.findById(updateEventAdminDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено", updateEventAdminDto.getCategory()));
         }
-        eventToUpdate = updateEventFields(eventToUpdate, updateEventAdminDto, categoryToUpdate);
+        updateEventFields(eventToUpdate, updateEventAdminDto, categoryToUpdate);
         return eventMapper.eventToDto(eventRepository.save(eventToUpdate));
     }
 
@@ -226,7 +241,9 @@ public class EventServiceImpl implements EventService {
         } else {
             event.setViews(0);
         }
-        return eventMapper.eventToDto(event);
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        eventFullDto.setComments(commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId)));
+        return eventFullDto;
     }
 
     @Override
@@ -259,6 +276,65 @@ public class EventServiceImpl implements EventService {
         }
 
         return eventMapper.listEventsToListDto(result);
+    }
+
+    @Override
+    public CommentDto createComment(Integer userId, Integer eventId, NewCommentDto newCommentDto) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден", userId));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event не найден", eventId));
+        Comment comment = new Comment();
+        comment.setText(newCommentDto.getText());
+        comment.setCreator(user);
+        comment.setEvent(event);
+        comment.setCreatedOn(LocalDateTime.now());
+        comment = commentRepository.save(comment);
+        return commentMapper.commentToDto(comment);
+    }
+
+    @Override
+    public CommentDto updateComment(Integer userId, Integer eventId, Integer commentId, UpdateCommentDto updateCommentDto) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User не найден", userId));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event не найден", eventId));
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException("Comment не найден", commentId));
+        if (!comment.getCreator().getId().equals(userId)) {
+            throw new CommentException("Вы не автор данного комментария");
+        }
+        comment.setText(updateCommentDto.getText());
+        return commentMapper.commentToDto(commentRepository.save(comment));
+    }
+
+    @Override
+    public void deleteComment(Integer userId, Integer eventId, Integer commentId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User не найден", userId);
+        }
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event не найден", eventId);
+        }
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException("Comment не найден", commentId));
+        if (!comment.getCreator().getId().equals(userId)) {
+            throw new CommentException("Вы не автор данного комментария");
+        }
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public void deleteCommentByAdmin(Integer eventId, Integer commentId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event не найден", eventId);
+        }
+        if (!commentRepository.existsById(commentId)) {
+            throw new NotFoundException("Comment не найден", commentId);
+        }
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public List<CommentDto> getCommentsForEvent(Integer eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event не найден", eventId);
+        }
+        return commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId));
     }
 
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {

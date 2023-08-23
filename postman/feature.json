@@ -1,0 +1,512 @@
+{
+  "info": {
+    "_postman_id": "26f70af9-6638-430b-a43b-05cbef0be856",
+    "name": "Comments",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "26439526"
+  },
+  "item": [
+    {
+      "name": "CreateComment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response is an object with id property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('id');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with text property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('text');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with authorName property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('event');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('creator');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('createdOn');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"newComment\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "1"
+            },
+            {
+              "key": "eventId",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CreateNullComment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {",
+              "    pm.response.to.be.badRequest;    ",
+              "    pm.response.to.be.withBody;",
+              "    pm.response.to.be.json;",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "2"
+            },
+            {
+              "key": "eventId",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CreateComment2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response is an object with id property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('id');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with text property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('text');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with authorName property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('event');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('creator');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('createdOn');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"comment2\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "1"
+            },
+            {
+              "key": "eventId",
+              "value": "6"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GetComment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Ответ должен содержать массив\", function () {",
+              "    const responseData = pm.response.json();",
+              "    pm.expect(responseData).to.be.an('array');",
+              "});",
+              "",
+              "",
+              "pm.test(\"Массив должен содержать один комментарий\", function () {",
+              "    const responseData = pm.response.json();",
+              "    pm.expect(responseData).to.be.an('array').and.to.have.lengthOf(1);",
+              "});",
+              "",
+              "pm.test(\"Каждый комментарий должен содержать поля: id, text, event, creator, createdOn\", function () {",
+              "    const responseData = pm.response.json();",
+              "    pm.expect(responseData).to.be.an('array');",
+              "    responseData.forEach(function (comment) {",
+              "        pm.expect(comment).to.have.property('id');",
+              "        pm.expect(comment).to.have.property('text');",
+              "        pm.expect(comment).to.have.property('event');",
+              "        pm.expect(comment).to.have.property('creator');",
+              "        pm.expect(comment).to.have.property('createdOn');",
+              "    });",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/events/:eventId/comments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "events",
+            ":eventId",
+            "comments"
+          ],
+          "variable": [
+            {
+              "key": "eventId",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "UpdateComment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Response status code is 201\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is an object with id property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('id');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with text property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('text');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with authorName property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('event');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('creator');",
+              "});",
+              "",
+              "pm.test(\"Response is an object with created property\", function () {",
+              "    pm.expect(pm.response.json()).to.be.an('object').that.has.property('createdOn');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"text\": \"updateComment\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments/:commentId",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments",
+            ":commentId"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "1"
+            },
+            {
+              "key": "eventId",
+              "value": "5"
+            },
+            {
+              "key": "commentId",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DeleteComment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 204 и данные в формате json\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments/:commentId",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments",
+            ":commentId"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "1"
+            },
+            {
+              "key": "eventId",
+              "value": "5"
+            },
+            {
+              "key": "commentId",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DeleteCommentNotAuthor",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 409 и данные в формате json\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users/:userId/events/:eventId/comments/:commentId",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            ":userId",
+            "events",
+            ":eventId",
+            "comments",
+            ":commentId"
+          ],
+          "variable": [
+            {
+              "key": "userId",
+              "value": "3"
+            },
+            {
+              "key": "eventId",
+              "value": "6"
+            },
+            {
+              "key": "commentId",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DeleteCommentByAdmin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Ответ должен содержать код статуса 204 и данные в формате json\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/admin/events/:eventId/comments/:commentId",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "admin",
+            "events",
+            ":eventId",
+            "comments",
+            ":commentId"
+          ],
+          "variable": [
+            {
+              "key": "eventId",
+              "value": "6"
+            },
+            {
+              "key": "commentId",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

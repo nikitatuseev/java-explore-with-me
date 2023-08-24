@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> findByEventId(Integer eventId);
+
     Optional<Comment> findByIdAndCreatorId(Integer id, Integer creatorId);
+
     List<Comment> findByEventIdOrderByCreatedOnDesc(Integer eventId);
 }

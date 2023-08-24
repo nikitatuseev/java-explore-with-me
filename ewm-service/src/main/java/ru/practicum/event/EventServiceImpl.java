@@ -279,6 +279,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public CommentDto createComment(Integer userId, NewCommentDto newCommentDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден", userId));
@@ -291,6 +292,7 @@ public class EventServiceImpl implements EventService {
         comment.setCreator(user);
         comment.setEvent(event);
         comment.setCreatedOn(LocalDateTime.now());
+        event.setCommentCount(event.getCommentCount() + 1);
 
         comment = commentRepository.save(comment);
 
@@ -298,7 +300,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public CommentDto updateComment(Integer userId, Integer eventId, UpdateCommentDto updateCommentDto) {
+    @Transactional
+    public CommentDto updateComment(Integer userId, UpdateCommentDto updateCommentDto) {
         Comment comment = commentRepository.findByIdAndCreatorId(updateCommentDto.getCommentId(), userId)
                 .orElseThrow(() -> new NotFoundException("Comment не найден или вы не автор данного комментария", updateCommentDto.getCommentId()));
 
@@ -310,22 +313,25 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
+    @Transactional
     public void deleteComment(Integer userId, Integer commentId) {
         Comment comment = commentRepository.findByIdAndCreatorId(commentId, userId)
                 .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
-
+        comment.getEvent().setCommentCount(comment.getEvent().getCommentCount() - 1);
         commentRepository.deleteById(commentId);
     }
 
     @Override
+    @Transactional
     public void deleteCommentByAdmin(Integer commentId) {
-        if (!commentRepository.existsById(commentId)) {
-            throw new NotFoundException("Comment не найден", commentId);
-        }
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
+        comment.getEvent().setCommentCount(comment.getEvent().getCommentCount() - 1);
         commentRepository.deleteById(commentId);
     }
 
     @Override
+    @Transactional
     public List<CommentDto> getCommentsForEvent(Integer eventId) {
         if (!eventRepository.existsById(eventId)) {
             throw new NotFoundException("Event не найден", eventId);
@@ -334,7 +340,6 @@ public class EventServiceImpl implements EventService {
         List<Comment> comments = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId);
         return commentMapper.listCommentsToListDto(comments);
     }
-
 
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {

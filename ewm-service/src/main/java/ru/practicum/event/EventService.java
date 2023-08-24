@@ -43,7 +43,7 @@ public interface EventService {
 
     CommentDto createComment(Integer userId, NewCommentDto newCommentDto);
 
-    CommentDto updateComment(Integer userId, Integer eventId, UpdateCommentDto updateCommentDto);
+    CommentDto updateComment(Integer userId, UpdateCommentDto updateCommentDto);
 
     void deleteComment(Integer userId, Integer commentId);
 

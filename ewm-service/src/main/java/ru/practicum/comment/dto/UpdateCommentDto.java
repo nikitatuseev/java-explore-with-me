@@ -1,4 +1,4 @@
-package ru.practicum.event.comment.dto;
+package ru.practicum.comment.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -13,6 +13,7 @@ import javax.validation.constraints.Size;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateCommentDto {
     @NotBlank
-    @Size(min = 1, max = 200)
+    @Size(min = 1, max = 1000)
     String text;
+    Integer commentId;
 }

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import ru.practicum.event.comment.dto.CommentDto;
+import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.event.dto.EventFilterDto;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.HitDto;

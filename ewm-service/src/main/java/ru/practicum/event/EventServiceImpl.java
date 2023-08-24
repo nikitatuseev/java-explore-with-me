@@ -7,12 +7,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
-import ru.practicum.event.comment.Comment;
-import ru.practicum.event.comment.CommentMapper;
-import ru.practicum.event.comment.CommentRepository;
-import ru.practicum.event.comment.dto.CommentDto;
-import ru.practicum.event.comment.dto.NewCommentDto;
-import ru.practicum.event.comment.dto.UpdateCommentDto;
+import ru.practicum.comment.Comment;
+import ru.practicum.comment.CommentMapper;
+import ru.practicum.comment.CommentRepository;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.UriStatDto;
@@ -279,50 +279,46 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public CommentDto createComment(Integer userId, Integer eventId, NewCommentDto newCommentDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден", userId));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event не найден", eventId));
+    public CommentDto createComment(Integer userId, NewCommentDto newCommentDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден", userId));
+
+        Event event = eventRepository.findByIdAndState(newCommentDto.getEventId(), State.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException("Опубликованное событие не найдено", newCommentDto.getEventId()));
+
         Comment comment = new Comment();
         comment.setText(newCommentDto.getText());
         comment.setCreator(user);
         comment.setEvent(event);
         comment.setCreatedOn(LocalDateTime.now());
+
         comment = commentRepository.save(comment);
+
         return commentMapper.commentToDto(comment);
     }
 
     @Override
-    public CommentDto updateComment(Integer userId, Integer eventId, Integer commentId, UpdateCommentDto updateCommentDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User не найден", userId));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event не найден", eventId));
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException("Comment не найден", commentId));
-        if (!comment.getCreator().getId().equals(userId)) {
-            throw new CommentException("Вы не автор данного комментария");
-        }
+    public CommentDto updateComment(Integer userId, Integer eventId, UpdateCommentDto updateCommentDto) {
+        Comment comment = commentRepository.findByIdAndCreatorId(updateCommentDto.getCommentId(), userId)
+                .orElseThrow(() -> new NotFoundException("Comment не найден или вы не автор данного комментария", updateCommentDto.getCommentId()));
+
         comment.setText(updateCommentDto.getText());
+        comment.setLastEditedOn(LocalDateTime.now());
+
         return commentMapper.commentToDto(commentRepository.save(comment));
     }
 
+
     @Override
-    public void deleteComment(Integer userId, Integer eventId, Integer commentId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("User не найден", userId);
-        }
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Event не найден", eventId);
-        }
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException("Comment не найден", commentId));
-        if (!comment.getCreator().getId().equals(userId)) {
-            throw new CommentException("Вы не автор данного комментария");
-        }
+    public void deleteComment(Integer userId, Integer commentId) {
+        Comment comment = commentRepository.findByIdAndCreatorId(commentId, userId)
+                .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
+
         commentRepository.deleteById(commentId);
     }
 
     @Override
-    public void deleteCommentByAdmin(Integer eventId, Integer commentId) {
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Event не найден", eventId);
-        }
+    public void deleteCommentByAdmin(Integer commentId) {
         if (!commentRepository.existsById(commentId)) {
             throw new NotFoundException("Comment не найден", commentId);
         }
@@ -334,8 +330,11 @@ public class EventServiceImpl implements EventService {
         if (!eventRepository.existsById(eventId)) {
             throw new NotFoundException("Event не найден", eventId);
         }
-        return commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId));
+
+        List<Comment> comments = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId);
+        return commentMapper.listCommentsToListDto(comments);
     }
+
 
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {

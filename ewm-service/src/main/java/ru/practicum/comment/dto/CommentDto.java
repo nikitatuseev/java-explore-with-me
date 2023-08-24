@@ -1,4 +1,4 @@
-package ru.practicum.event.comment.dto;
+package ru.practicum.comment.dto;
 
 
 import lombok.*;
@@ -17,4 +17,5 @@ public class CommentDto {
     String event;
     String creator;
     LocalDateTime createdOn;
+    LocalDateTime lastEditedOn;
 }

@@ -18,6 +18,8 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     Optional<Event> findByInitiatorIdAndId(Integer userId, Integer eventId);
 
+    Optional<Event> findByIdAndState(Integer id, State state);
+
     @Query("select e " +
             "from Event as e " +
             "join fetch e.initiator as i " +

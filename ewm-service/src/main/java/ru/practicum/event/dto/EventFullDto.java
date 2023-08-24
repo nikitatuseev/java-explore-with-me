@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.dto.CategoryDto;
-import ru.practicum.event.comment.dto.CommentDto;
+import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.location.Location;
 import ru.practicum.user.UserShortDto;

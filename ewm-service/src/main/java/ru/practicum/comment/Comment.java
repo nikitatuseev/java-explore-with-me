@@ -1,8 +1,6 @@
-package ru.practicum.event.comment;
+package ru.practicum.comment;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.event.Event;
 import ru.practicum.user.User;
 
@@ -11,7 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Comment {
@@ -28,4 +27,6 @@ public class Comment {
     User creator;
     @Column(name = "created_on")
     LocalDateTime createdOn;
+    @Column(name = "last_edited_on")
+    LocalDateTime lastEditedOn;
 }

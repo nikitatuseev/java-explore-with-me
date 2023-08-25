@@ -53,8 +53,4 @@ public class Event {
     State state;
     @Column(name = "title")
     String title;
-    @Column(name = "views")
-    Integer views;
-    @Column(name = "comment_count")
-    Integer commentCount = 0;
 }

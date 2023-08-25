@@ -34,8 +34,6 @@ create table if not exists events(
     request_moderation boolean default true not null,
     state varchar(100),
     title varchar(120),
-    views integer default 0,
-    commentCount integer default 0,
     constraint pk_events primary key(id)
 );
 

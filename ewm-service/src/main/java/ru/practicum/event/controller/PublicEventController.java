@@ -27,15 +27,15 @@ public class PublicEventController {
 
     @GetMapping
     public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
-                                                         @RequestParam(required = false) List<Integer> categories,
-                                                         @RequestParam(required = false) Boolean paid,
-                                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-                                                         @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                                         @RequestParam(required = false) SortBy sort,
-                                                         @RequestParam(defaultValue = "0") Integer from,
-                                                         @RequestParam(defaultValue = "10") Integer size,
-                                                         HttpServletRequest httpServletRequest) {
+                                         @RequestParam(required = false) List<Integer> categories,
+                                         @RequestParam(required = false) Boolean paid,
+                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                         @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+                                         @RequestParam(required = false) SortBy sort,
+                                         @RequestParam(defaultValue = "0") Integer from,
+                                         @RequestParam(defaultValue = "10") Integer size,
+                                         HttpServletRequest httpServletRequest) {
         statsClient.postHit(new HitDto("exploreWithMe", httpServletRequest.getRequestURI(), httpServletRequest.getRemoteAddr(), LocalDateTime.now()));
 
         return eventService.getEvents(EventFilterDto.builder()

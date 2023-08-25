@@ -3,7 +3,6 @@ package ru.practicum.event;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
@@ -28,8 +27,8 @@ import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -235,14 +234,18 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с ID %s не найдено", eventId);
         }
-        List<UriStatDto> statsDtos = statsClient.getStats(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.now(), new String[]{uri}, true);
-        if (!statsDtos.isEmpty()) {
-            event.setViews(statsDtos.get(0).getHits().intValue());
-        } else {
-            event.setViews(0);
-        }
+
+        List<UriStatDto> statsDtos = statsClient.getStats(event.getCreatedOn(), LocalDateTime.now(), new String[]{uri}, true);
+
         EventFullDto eventFullDto = eventMapper.eventToDto(event);
         eventFullDto.setComments(commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId)));
+
+        if (!statsDtos.isEmpty()) {
+            eventFullDto.setViews(statsDtos.get(0).getHits().intValue());
+        } else {
+            eventFullDto.setViews(0);
+        }
+
         return eventFullDto;
     }
 
@@ -251,13 +254,8 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEvents(EventFilterDto filterDto) {
         validateDateRange(filterDto.getRangeStart(), filterDto.getRangeEnd());
 
-        Sort sortBy = Sort.by("views");
-        if (filterDto.getSort() != null && filterDto.getSort() == SortBy.EVENT_DATE) {
-            sortBy = Sort.by("eventDate");
-        }
-
-        int page = filterDto.getFrom() > 0 ? filterDto.getFrom() / filterDto.getSize() : 0;
-        Pageable eventsPageable = PageRequest.of(page, filterDto.getSize(), sortBy);
+        int page = Math.max(0, filterDto.getFrom() / filterDto.getSize());
+        Pageable eventsPageable = PageRequest.of(page, filterDto.getSize());
 
         List<Event> result;
 
@@ -275,7 +273,34 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        return eventMapper.listEventsToListDto(result);
+        List<Integer> eventIds = result.stream().map(Event::getId).collect(Collectors.toList());
+
+        Map<Integer, Integer> commentCountMap = commentRepository.countCommentsByEventIds(eventIds);
+
+        List<EventShortDto> eventShortDtos = new ArrayList<>();
+
+        for (Event event : result) {
+            Integer commentCount = commentCountMap.getOrDefault(event.getId(), 0);
+            EventShortDto eventShortDto = eventMapper.eventToShortDto(event);
+            eventShortDto.setCommentCount(commentCount);
+
+            // Учет просмотров события
+            List<UriStatDto> statsDtos = statsClient.getStats(event.getCreatedOn(), LocalDateTime.now(), new String[]{"event-" + event.getId()}, true);
+            if (!statsDtos.isEmpty()) {
+                eventShortDto.setViews(statsDtos.get(0).getHits().intValue());
+            } else {
+                eventShortDto.setViews(0);
+            }
+
+            eventShortDtos.add(eventShortDto);
+        }
+        // пришлось изменить способ сортировки так как возникала ошибка при сортировке по просмотрам
+        if (filterDto.getSort() == SortBy.EVENT_DATE) {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+        } else {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews).reversed());
+        }
+        return eventShortDtos;
     }
 
     @Override
@@ -292,8 +317,6 @@ public class EventServiceImpl implements EventService {
         comment.setCreator(user);
         comment.setEvent(event);
         comment.setCreatedOn(LocalDateTime.now());
-        event.setCommentCount(event.getCommentCount() + 1);
-
         comment = commentRepository.save(comment);
 
         return commentMapper.commentToDto(comment);
@@ -311,22 +334,19 @@ public class EventServiceImpl implements EventService {
         return commentMapper.commentToDto(commentRepository.save(comment));
     }
 
-
     @Override
     @Transactional
     public void deleteComment(Integer userId, Integer commentId) {
-        Comment comment = commentRepository.findByIdAndCreatorId(commentId, userId)
+        commentRepository.findByIdAndCreatorId(commentId, userId)
                 .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
-        comment.getEvent().setCommentCount(comment.getEvent().getCommentCount() - 1);
         commentRepository.deleteById(commentId);
     }
 
     @Override
     @Transactional
     public void deleteCommentByAdmin(Integer commentId) {
-        Comment comment = commentRepository.findById(commentId)
+        commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
-        comment.getEvent().setCommentCount(comment.getEvent().getCommentCount() - 1);
         commentRepository.deleteById(commentId);
     }
 

@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.user.UserShortDto;
 
-import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 @Getter
@@ -25,6 +24,5 @@ public class EventShortDto {
     Boolean paid;
     String title;
     Integer views;
-    @PositiveOrZero
     Integer commentCount;
 }

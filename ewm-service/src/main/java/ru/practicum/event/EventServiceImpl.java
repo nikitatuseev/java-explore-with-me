@@ -3,10 +3,15 @@ package ru.practicum.event;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
+import ru.practicum.comment.Comment;
+import ru.practicum.comment.CommentMapper;
+import ru.practicum.comment.CommentRepository;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.SortBy;
 import ru.practicum.model.hit.dto.UriStatDto;
@@ -22,8 +27,8 @@ import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +44,8 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final StatsClient statsClient;
     private final CustomEventMapper customEventMapper;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     @Override
     @Transactional
@@ -80,7 +87,12 @@ public class EventServiceImpl implements EventService {
         }
         Event event = updateEventFields(eventToUpdate, eventDto, categoryToUpdate);
         event = eventRepository.save(event);
-        return eventMapper.eventToDto(event);
+
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        List<CommentDto> eventComments = commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId));
+        eventFullDto.setComments(eventComments);
+
+        return eventFullDto;
     }
 
     @Override
@@ -102,7 +114,9 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Пользователя с ID %s не найдено", userId);
         }
         Event event = eventRepository.findByInitiatorIdAndId(userId, eventId).orElseThrow(() -> new NotFoundException("Событие с ID %s не найдено", eventId));
-        return eventMapper.eventToDto(event);
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        eventFullDto.setComments(commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId)));
+        return eventFullDto;
     }
 
     @Override
@@ -209,7 +223,7 @@ public class EventServiceImpl implements EventService {
             categoryToUpdate = categoryRepository.findById(updateEventAdminDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("Категория с ID %s не найдено", updateEventAdminDto.getCategory()));
         }
-        eventToUpdate = updateEventFields(eventToUpdate, updateEventAdminDto, categoryToUpdate);
+        updateEventFields(eventToUpdate, updateEventAdminDto, categoryToUpdate);
         return eventMapper.eventToDto(eventRepository.save(eventToUpdate));
     }
 
@@ -220,13 +234,19 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с ID %s не найдено", eventId);
         }
-        List<UriStatDto> statsDtos = statsClient.getStats(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.now(), new String[]{uri}, true);
+
+        List<UriStatDto> statsDtos = statsClient.getStats(event.getCreatedOn(), LocalDateTime.now(), new String[]{uri}, true);
+
+        EventFullDto eventFullDto = eventMapper.eventToDto(event);
+        eventFullDto.setComments(commentMapper.listCommentsToListDto(commentRepository.findByEventId(eventId)));
+
         if (!statsDtos.isEmpty()) {
-            event.setViews(statsDtos.get(0).getHits().intValue());
+            eventFullDto.setViews(statsDtos.get(0).getHits().intValue());
         } else {
-            event.setViews(0);
+            eventFullDto.setViews(0);
         }
-        return eventMapper.eventToDto(event);
+
+        return eventFullDto;
     }
 
     @Override
@@ -234,13 +254,8 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEvents(EventFilterDto filterDto) {
         validateDateRange(filterDto.getRangeStart(), filterDto.getRangeEnd());
 
-        Sort sortBy = Sort.by("views");
-        if (filterDto.getSort() != null && filterDto.getSort() == SortBy.EVENT_DATE) {
-            sortBy = Sort.by("eventDate");
-        }
-
-        int page = filterDto.getFrom() > 0 ? filterDto.getFrom() / filterDto.getSize() : 0;
-        Pageable eventsPageable = PageRequest.of(page, filterDto.getSize(), sortBy);
+        int page = Math.max(0, filterDto.getFrom() / filterDto.getSize());
+        Pageable eventsPageable = PageRequest.of(page, filterDto.getSize());
 
         List<Event> result;
 
@@ -258,7 +273,92 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        return eventMapper.listEventsToListDto(result);
+        List<Integer> eventIds = result.stream().map(Event::getId).collect(Collectors.toList());
+
+        Map<Integer, Integer> commentCountMap = commentRepository.countCommentsByEventIds(eventIds);
+
+        List<EventShortDto> eventShortDtos = new ArrayList<>();
+
+        for (Event event : result) {
+            Integer commentCount = commentCountMap.getOrDefault(event.getId(), 0);
+            EventShortDto eventShortDto = eventMapper.eventToShortDto(event);
+            eventShortDto.setCommentCount(commentCount);
+
+            // Учет просмотров события
+            List<UriStatDto> statsDtos = statsClient.getStats(event.getCreatedOn(), LocalDateTime.now(), new String[]{"event-" + event.getId()}, true);
+            if (!statsDtos.isEmpty()) {
+                eventShortDto.setViews(statsDtos.get(0).getHits().intValue());
+            } else {
+                eventShortDto.setViews(0);
+            }
+
+            eventShortDtos.add(eventShortDto);
+        }
+        // пришлось изменить способ сортировки так как возникала ошибка при сортировке по просмотрам
+        if (filterDto.getSort() == SortBy.EVENT_DATE) {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+        } else {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews).reversed());
+        }
+        return eventShortDtos;
+    }
+
+    @Override
+    @Transactional
+    public CommentDto createComment(Integer userId, NewCommentDto newCommentDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден", userId));
+
+        Event event = eventRepository.findByIdAndState(newCommentDto.getEventId(), State.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException("Опубликованное событие не найдено", newCommentDto.getEventId()));
+
+        Comment comment = new Comment();
+        comment.setText(newCommentDto.getText());
+        comment.setCreator(user);
+        comment.setEvent(event);
+        comment.setCreatedOn(LocalDateTime.now());
+        comment = commentRepository.save(comment);
+
+        return commentMapper.commentToDto(comment);
+    }
+
+    @Override
+    @Transactional
+    public CommentDto updateComment(Integer userId, UpdateCommentDto updateCommentDto) {
+        Comment comment = commentRepository.findByIdAndCreatorId(updateCommentDto.getCommentId(), userId)
+                .orElseThrow(() -> new NotFoundException("Comment не найден или вы не автор данного комментария", updateCommentDto.getCommentId()));
+
+        comment.setText(updateCommentDto.getText());
+        comment.setLastEditedOn(LocalDateTime.now());
+
+        return commentMapper.commentToDto(commentRepository.save(comment));
+    }
+
+    @Override
+    @Transactional
+    public void deleteComment(Integer userId, Integer commentId) {
+        commentRepository.findByIdAndCreatorId(commentId, userId)
+                .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCommentByAdmin(Integer commentId) {
+        commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException("Comment не найден или вы не автор данного комментария"));
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    @Transactional
+    public List<CommentDto> getCommentsForEvent(Integer eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event не найден", eventId);
+        }
+
+        List<Comment> comments = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId);
+        return commentMapper.listCommentsToListDto(comments);
     }
 
     private void validateDateRange(LocalDateTime rangeStart, LocalDateTime rangeEnd) {

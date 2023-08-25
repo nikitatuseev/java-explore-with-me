@@ -41,7 +41,8 @@ public class ErrorHandler {
             EventException.class,
             InvalidRequestStateException.class,
             RequestException.class,
-            DataIntegrityViolationException.class})
+            DataIntegrityViolationException.class,
+            CommentException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public Error handleConflict(RuntimeException e) {
         return new Error(HttpStatus.CONFLICT.toString(), e.toString(), e.getMessage(), LocalDateTime.now().toString());

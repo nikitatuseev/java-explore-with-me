@@ -37,7 +37,6 @@ public class CustomEventMapper {
         event.setParticipantLimit(eventDto.getParticipantLimit() != null ? eventDto.getParticipantLimit() : 0);
         event.setRequestModeration(eventDto.getRequestModeration() != null ? eventDto.getRequestModeration() : true);
         event.setState(State.PENDING);
-        event.setViews(0);
         event.setConfirmedRequests(0);
 
         return event;

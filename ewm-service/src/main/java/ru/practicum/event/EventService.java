@@ -1,5 +1,8 @@
 package ru.practicum.event;
 
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.State;
 import ru.practicum.request.EventRequestStatusUpdateDto;
@@ -36,6 +39,15 @@ public interface EventService {
 
     EventFullDto getEvent(Integer eventId, String uri);
 
-    //исправить
     List<EventShortDto> getEvents(EventFilterDto filterDto);
+
+    CommentDto createComment(Integer userId, NewCommentDto newCommentDto);
+
+    CommentDto updateComment(Integer userId, UpdateCommentDto updateCommentDto);
+
+    void deleteComment(Integer userId, Integer commentId);
+
+    void deleteCommentByAdmin(Integer commentId);
+
+    List<CommentDto> getCommentsForEvent(Integer eventId);
 }
